@@ -1,20 +1,20 @@
-export class Account{
-    constructor(){
-        this.account = null
-        this.name = null
-        this.phone = null
+export class Account {
+    constructor() {
+        this.account = ''
+        this.name = ''
+        this.phone = ''
         this.avatar = null
-        this.resetPass = null
+        this.resetPass = ''
     }
 }
-export class Course{
-    constructor(){
+export class Course {
+    constructor() {
         this.Course_ID = null
-        this.Course_description = null
+        this.Course_description =''
         this.Course_category = null
-        this.Course_header = null
+        this.Course_header =''
         this.Course_image = null
-        this.Tag_ID = null
-        this.Course_price = null
+        this.Tag_ID = []
+        this.Course_price = 0
     }
 }

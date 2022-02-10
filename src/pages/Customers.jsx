@@ -1,9 +1,9 @@
-import Axios from 'axios'
 import React, { useEffect, useState } from 'react'
 
 import Table from '../component/table/Table'
 import api from '../assets/JsonData/api.json'
 import { BarWave } from 'react-cssfx-loading/lib'
+import { getData } from '../utils/fecthData'
 const customerTableHead = [
     '',
     'Tên',
@@ -24,23 +24,12 @@ const renderBody = (item, index) => (
         <td>{item.total_spend}</td>
     </tr>
 )
-let axiosConfig = {
-    headers: {
-      'Content-Type': 'application/json;charset-UTF-8',
-      "Accept": 'application/json',
-      "Authorization": `Bearer ${localStorage.getItem('token-teacher')}`
-    }
-  }
+
 const Customers = () => {
     const [students, setStudents] = useState([])
 
     useEffect(() => {
-        Axios.get(api.find(e => e.pages === 'Học viên').api['get-list_student'],axiosConfig).then(
-            res => {
-                const data = res.data
-                setStudents(data)
-            }
-        )
+        getData(api.find(e => e.pages === 'Học viên').api['get-list_student']).then(data => setStudents(data))
     }, [])
     return (
         <div>
@@ -56,7 +45,7 @@ const Customers = () => {
                                     renderHead={(item, index) => renderHead(item, index)}
                                     bodyData={students}
                                     renderBody={(item, index) => renderBody(item, index)}
-                                /> : <BarWave/>
+                                /> : <BarWave />
                             }
                         </div>
                     </div>

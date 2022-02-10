@@ -1,141 +1,92 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import Axios from 'axios'
 import '../assets/css/createCourse.css'
 import api from '../assets/JsonData/api.json'
 import { BarWave } from 'react-cssfx-loading/lib'
 import ModalLesson from '../component/modal-lesson/ModalLesson'
-import { useDispatch } from 'react-redux'
-import NotifyActions from '../redux/actions/NotifyActions'
+import { toast } from 'react-toastify'
+import { getData, postData, putData } from '../utils/fecthData'
+import { Course } from '../Model'
+import { Autocomplete, TextField } from "@mui/material";
+import Axios from 'axios'
+
 
 
 export const CreateCourse = () => {
-  const dispatch = useDispatch()
 
   const [list_new_categories, setListNewCategories] = useState([])
-  const [categoryID, setcategoryID] = useState(null)
+  const [course, setCourse] = useState(new Course())
+
   const choseFile_ref = useRef(null)
   const [lesson, setlesson] = useState([])
   const [courseImageUrl, setCourseImageUrl] = useState(null)
   const { id } = useParams()
   const [newChap, setNewChap] = useState(null)
-  const [Course_ID, setCourseId] = useState(null)
-  // Form
-  const [courseName, setCourseName] = useState(null)
-  const [coursePrice, setCoursePrice] = useState(null)
-  const [courseImage, setCourseImage] = useState(null)
-  const [courseCategory, setCourseCategory] = useState(null)
-  const [courseCategoryTag, setCourseCategoryTag] = useState(null)
-  const [courseDescription, setcourseDescription] = useState(null)
+
   const [loadStatus, setloadStatus] = useState(null)
+  const handleChaneValueCourse = (e) => {
+    const { name, value } = e.target
 
-
-  let axiosConfig = {
-    headers: {
-      'Content-Type': 'application/json;charset-UTF-8',
-      "Accept": 'application/json',
-      "Authorization": `Bearer ${localStorage.getItem('token-teacher')}`
+    // console.log(name,value)
+    setCourse({ ...course, [name]: value })
+    if (name === 'Course_category') {
+      let tmpCourse = { ...course }
+      tmpCourse.Tag_ID = []
+      tmpCourse.Course_category = value
+      setCourse({...tmpCourse})
     }
   }
-  const handleChange = (event) => {
-    const name = event.target.name
-    const value = event.target.value
-    switch (name) {
-      case "courseName":
-        setCourseName(value)
-        break
-      case "coursePrice":
-        setCoursePrice(value)
-        break
-      case "courseImage":
-        setCourseImage(value)
-        break
-      case "courseCategory":
-        let tmpCategory = list_new_categories.find(e => e.category.Category_ID == value)
-        setcategoryID(value)
-        setCourseCategory(tmpCategory)
-        break
-      case "courseCategoryTag":
-        setCourseCategoryTag(value)
-        break
-      case "courseDescription":
-        setcourseDescription(value)
-        break
-    }
-  }
-
 
   const createCourse = () => {
-    if (courseName === null || coursePrice === null || courseCategory === null || courseDescription === null) return
-    const courseData = {
-      Course_header: courseName,
-      Course_price: coursePrice,
-      Course_category: categoryID,
-      Course_description: courseDescription,
-      Course_image: courseImageUrl,
-      Tag_ID: [courseCategoryTag]
+    if (course.Course_header === '' || course.Course_price === 0 || course.Course_category === null || course.Course_description === '') return
+    let courseData = { ...course }
+    courseData.Tag_ID = course.Tag_ID.map(item => item.Tag_ID)
+    if (courseImageUrl === null && course.Course_ID !== null) {
+      putData(api.find(e => e.pages === 'Thêm khóa học').api['update-course'] + course.Course_ID, courseData).then(
+        () => toast.success('Cập nhật thành công')
+      ).catch(() => toast.error('Cập nhật không thành công'))
     }
-    if (courseImage != null) {
+    if (courseImageUrl !== null) {
       const formData = new FormData()
-      formData.append("file", courseImage);
+      formData.append("file", courseImageUrl);
       formData.append("upload_preset", "uploadimage")
       Axios.post(api.find(e => e.pages === 'Thêm khóa học').api['upload-image'], formData, {
-        onUploadProgress: progressEvent => {
+        onUploadProgress: ProgressEvent => {
           setloadStatus(1)
         }
       }).then((rs) => {
-        setCourseImageUrl(rs.data.secure_url)
+        course.Course_image = rs.data.secure_url
         courseData.Course_image = rs.data.secure_url
-        if (id === undefined || id === null)
-          Axios.post(api.find(e => e.pages === 'Thêm khóa học').api['post-course'], courseData, axiosConfig)
-            .then(
-              res => {
-                setCourseId(res.data.courseID)
-                dispatch(NotifyActions.addNotify({ notifyType: 'notify-success', message: 'Thêm mới thành công' }))
-              }
-            ).catch(error => {
-              console.log("Error : ", error)
-            })
-        else {
-
-          Axios.put(api.find(e => e.pages === 'Thêm khóa học').api['update-course'] + id, courseData, axiosConfig)
-            .then(
-              res => {
-                setCourseId(id)
-                dispatch(NotifyActions.addNotify({ notifyType: 'notify-success', message: 'Cập nhật thành công' }))
-              }
-            ).catch(error => {
-              console.log("Error : ", error)
-            })
-        }
         setloadStatus(null)
-      }).catch(error => {
-        console.log("Error : ", error)
+        if (course.Course_ID !== null)
+          putData(api.find(e => e.pages === 'Thêm khóa học').api['update-course'] + course.Course_ID, courseData).then(
+            () => toast.success('Cập nhật thành công')
+          ).catch(() => toast.error('Cập nhật không thành công'))
+        else
+          Axios.post('http://127.0.0.1:8000/api/teacher/manage/addCourse', courseData, {
+            headers: {
+              'Content-Type': 'application/json;charset-UTF-8',
+              "Accept": 'application/json',
+              "Authorization": `Bearer ${localStorage.getItem('token-teacher')}`
+            }
+          })
+            .then(
+              res => {
+                setCourse({ ...course, ['Course_ID']: res.data.courseID })
+                toast.success('Thêm thành công khóa học')
+              }
+            ).catch(() => toast.error('Thêm mới không thành công'))
       })
-    } else {
-
-      Axios.put(api.find(e => e.pages === 'Thêm khóa học').api['update-course'] + Course_ID, courseData, axiosConfig)
-        .then(
-          res => {
-            dispatch(NotifyActions.addNotify({ notifyType: 'notify-success', message: 'Update thành công' }))
-          }
-        ).catch(error => {
-          console.log("Error : ", error)
-        })
     }
-
   }
-
-
   useEffect(() => {
-    Axios.get(api.find(e => e.pages === 'Thêm khóa học').api['get-list_category'], axiosConfig)
+    getData(api.find(e => e.pages === 'Thêm khóa học').api['get-list_category'])
       .then(
-        res => {
-          const data = res.data
+        data => {
           setListNewCategories(data)
-          setCourseCategory(data[0])
-          setcategoryID(data[0].category.Category_ID)
-          setCourseCategoryTag(data[0].tags[0].Tag_ID)
+          course.Course_category = data[0].category.Category_ID
+          course.Tag_ID = [data[0].tags[0]]
+          setCourse({ ...course })
         }
       ).catch(error => {
         console.log("Error : ", error)
@@ -144,69 +95,60 @@ export const CreateCourse = () => {
 
   useEffect(() => {
     if (id !== undefined && list_new_categories.length > 0) {
-      Axios.get(api.find(e => e.pages === 'Thêm khóa học').api['get-infor_course'] + id, axiosConfig).then(
-        res => {
-          const data = res.data
-          setCourseName(data[0].Course_header)
-          setcourseDescription(data[0].Course_description)
-          setCourseImageUrl(data[0].Course_image)
-          setCoursePrice(data[0].Course_price)
-          setCourseCategory(list_new_categories.find(e => e.category.Category_ID === data[0].Course_category))
-          setCourseCategoryTag(data[1][0])
-          setcategoryID(list_new_categories.find(e => e.category.Category_ID === data[0].Course_category).category.Category_ID)
-          setlesson(data[2])
-          setCourseId(id)
-        }
-      ).catch(error => {
-        console.log("Error : ", error)
-      })
+      getData(api.find(e => e.pages === 'Thêm khóa học').api['get-infor_course'] + id)
+        .then(
+          data => {
+            let tags = list_new_categories.find(item => item.category.Category_ID === data[0].Course_category).tags.filter(value => data[1].indexOf(value.Tag_ID) > -1)
+            setCourse({ ...data[0], Tag_ID: tags })
+            setlesson(data[2])
+            console.log(data)
+          }
+        ).catch(error => {
+          console.log("Error : ", error)
+        })
     }
   }, [id, list_new_categories])
 
-
   const addNewLesson = (item) => {
-    const tmpLesson = lesson
+    let tmpLesson = [...lesson]
     tmpLesson.find(e => e.chap.Chap_ID === item.Chap_ID).lesson.push(item)
     setlesson(tmpLesson)
-    setNewChap('')
   }
 
   const addNewChap = () => {
     const dataChap = {
-      Course_ID,
+      Course_ID: course.Course_ID,
       Chap_description: newChap
     }
-    Axios.post(api.find(e => e.pages === 'Thêm khóa học').api['post-chap'], dataChap, axiosConfig)
+    postData(api.find(e => e.pages === 'Thêm khóa học').api['post-chap'], dataChap)
       .then(
-        res => {
+        data => {
           const currentlesson = lesson
           currentlesson.push({
             chap: {
-              Chap_ID: res.data.Chap_ID,
+              Chap_ID: data.chapID,
               Chap_description: newChap
             },
             lesson: []
           })
           setlesson(currentlesson)
-          setNewChap(null)
-          dispatch(NotifyActions.addNotify({ notifyType: 'notify-success', message: 'Thêm mới chương thành công' }))
+          setNewChap('')
+          toast.success('Thêm mới chương thành công')
         }
-      ).catch(error => {
-        console.log("Error : ", error)
-        dispatch(NotifyActions.addNotify({ notifyType: 'notify-error', message: 'Thêm mới không thành công' }))
+      ).catch(() => {
+        toast.error('Thêm mới không thành công')
       })
   }
 
 
   const updateLesson = (item) => {
-    // console.log(item, lesson)
-    lesson.push(item)
+    // window.history.reload()
   }
   return (
     <div>
       <h2 className="page-header">Thêm khóa học mới</h2>
       <div className="row">
-        <div className={Course_ID === null ? 'col-12' : 'col-8'}>
+        <div className={course.Course_ID === null ? 'col-12' : 'col-8'}>
           <div className="card">
             <div className="card_header"><h3>Thông tin khóa học</h3></div>
             <div className="card_body">
@@ -218,9 +160,9 @@ export const CreateCourse = () => {
                     <input
                       type="text"
                       placeholder="Tên khóa học"
-                      name='courseName'
-                      value={courseName}
-                      onChange={(e) => { handleChange(e) }}
+                      name='Course_header'
+                      value={course.Course_header}
+                      onChange={(e) => { handleChaneValueCourse(e) }}
                     />
                   </div>
                   <h4>Nhập giá khóa học</h4>
@@ -228,99 +170,94 @@ export const CreateCourse = () => {
                     <i className='bx bx-dollar' ></i>
                     <input
                       type="number"
-                      name="coursePrice"
-                      value={coursePrice}
+                      name="Course_price"
+                      value={course.Course_price}
                       placeholder='Giá khóa học'
-                      onChange={(e) => { handleChange(e) }} />
+                      onChange={(e) => { handleChaneValueCourse(e) }} />
                   </div>
                   <h4>Chọn ảnh cho khóa học</h4>
-                  <div className={`input-group ${courseImageUrl != null ? 'input-image' : ''}`}>
+                  <div className={`input-group ${course.Course_image != null ? 'input-image' : ''}`}>
                     {
-                      courseImageUrl != null ? <img src={courseImageUrl} /> : loadStatus != null ? <BarWave /> : ''
+                      course.Course_image != null ? <img src={course.Course_image} /> : loadStatus != null ? <BarWave /> : ''
                     }
                     <i className='bx bx-image-add' ></i>
                     <input
                       type="text"
                       name="name_file"
-                      value={courseImage != null ? courseImage.name : ''}
+                      value={courseImageUrl != null ? courseImageUrl.name : ''}
                       placeholder='Ảnh minh họa' className='file-name'
-                      onChange={(e) => { handleChange(e) }}
                     />
                     <button onClick={() => { choseFile_ref.current.click() }}>
-                      {courseImageUrl != null ? 'Đổi ảnh' : 'Chọn ảnh'}
+                      {course.Course_image != null ? 'Đổi ảnh' : 'Chọn ảnh'}
                     </button>
                     <input
                       ref={choseFile_ref}
                       type="file"
                       name="courseImage"
-                      onChange={(e) => { setCourseImage(e.target.files[0]) }}
+                      onChange={(e) => { setCourseImageUrl(e.target.files[0]) }}
                     />
                   </div>
                   <h4>Nhập thông tin mô tả khóa học</h4>
                   <div className="input-group textarea">
                     <textarea
-                      name="courseDescription"
-                      onChange={(e) => { handleChange(e) }}
-                      value={courseDescription != null ? courseDescription : ''}>
+                      name="Course_description"
+                      onChange={(e) => { handleChaneValueCourse(e) }}
+                      value={course.Course_description}>
 
                     </textarea>
                   </div>
                 </div>
                 <div className="col-4">
-                  {
-                    list_new_categories && list_new_categories.length > 0 ? (
-                      <div>
-                        <h4>Chọn category</h4>
-                        {
-                          courseCategory ? <div className="input-group">
-                            <select
-                              name="courseCategory"
-                              value={categoryID != null ? categoryID : 1}
-                              onChange={(e) => { handleChange(e) }}
-                              disabled={id === undefined ? false : true}
-                            >
-                              {
-                                list_new_categories.length > null ? list_new_categories.map((item, index) => <option value={item.category.Category_ID} key={index}>{item.category.Category_name}</option>) : ''
-                              }
-                            </select>
-                          </div> : ''
-                        }
-
-                        <h4>Chọn tag</h4>
-                        {
-                          courseCategoryTag ? <div className="input-group">
-                            <select
-                              name="courseCategoryTag"
-                              value={courseCategoryTag != null ? courseCategoryTag : 1}
-                              onChange={(e) => { handleChange(e) }}
-                              disabled={id === undefined ? false : true}
-                            >
-                              {
-                                courseCategory.tags.length > 0 ? courseCategory.tags.map((item, index) => <option value={item.Tag_ID} key={index}>{item.Tag_name}</option>) : ''
-                              }
-                            </select>
-                          </div> : ''
-                        }
-                      </div>
-                    ) : ''
-                  }
+                  <div>
+                    <h4>Chọn category</h4>
+                    {
+                      course.Course_category ?
+                        <div className="input-group">
+                          <select
+                            name="Course_category"
+                            value={course.Course_category}
+                            onChange={(e) => { handleChaneValueCourse(e) }}
+                            disabled={course.Course_ID === null ? false : true}
+                          >
+                            {
+                              list_new_categories.map((item, index) => <option value={item.category.Category_ID} key={index}>{item.category.Category_name}</option>)
+                            }
+                          </select>
+                        </div> : ''
+                    }
+                    <h4>Chọn tag</h4>
+                    {
+                      list_new_categories.length > 0 ?
+                        <Autocomplete
+                          multiple
+                          options={course.Course_category === null ? list_new_categories[0].tags : list_new_categories.find(item => item.category.Category_ID == course.Course_category).tags}
+                          getOptionLabel={option => option.Tag_name}
+                          onChange={(event, value) => setCourse({ ...course, ['Tag_ID']: value })}
+                          value={course.Tag_ID}
+                          renderInput={(params) => (
+                            <TextField {...params}
+                              placeholder='Please chose products'
+                            />
+                          )}
+                        />
+                        : ''
+                    }
+                  </div>
                 </div>
-
               </div>
             </div>
             <div className="card_footer">
-              <button onClick={createCourse}>{id === undefined ? 'Lưu lại' : 'Cập nhật'}</button>
+              <button onClick={createCourse}>{course.Course_ID === null ? 'Lưu lại' : 'Cập nhật'}</button>
             </div>
           </div>
         </div>
-        <div className={`col-4 ${Course_ID === null ? 'd-none' : ''}`}>
+        <div className={`col-4 ${course.Course_ID === null ? 'd-none' : ''}`}>
           <div className="card">
             <div className="card-header__lesson">
               <h3>Danh sách bài giảng</h3>
             </div>
             <div className="card-body__lesson">
               {
-
                 lesson.length > 0 && lesson.map((item, index) => (
                   <div className="lesson-chap" key={index}>
                     {
@@ -357,7 +294,7 @@ export const CreateCourse = () => {
               <div className="card-footer">
                 <div className="row">
                   <div className="col-9">
-                    <input type="text" placeholder='Tạo chương mới' onChange={(e) => setNewChap(e.target.value)} />
+                    <input type="text" placeholder='Tạo chương mới' value={newChap} onChange={(e) => setNewChap(e.target.value)} />
                   </div>
                   <div className="col-3">
                     <button onClick={addNewChap}>Thêm</button>

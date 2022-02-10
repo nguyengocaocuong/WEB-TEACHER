@@ -1,10 +1,11 @@
-import React, { useState, useRef } from 'react';
-import './modalLesson.css';
-import Modal from 'react-modal';
+import React, { useState, useRef } from 'react'
+import './modalLesson.css'
+import Modal from 'react-modal'
 import api from '../../assets/JsonData/api.json'
 import Axios from 'axios'
-import { BarWave } from 'react-cssfx-loading/lib';
-
+import { BarWave } from 'react-cssfx-loading/lib'
+import { postData, putData } from '../../utils/fecthData'
+import { toast } from 'react-toastify'
 const customStyles = {
   content: {
     top: '50%',
@@ -14,7 +15,7 @@ const customStyles = {
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
   },
-};
+}
 
 Modal.setAppElement('#root')
 
@@ -22,61 +23,60 @@ Modal.setAppElement('#root')
 
 export default function ModalLesson(props) {
   const [tag, settag] = useState(0)
-  const [modalIsOpen, setIsOpen] = React.useState(false);
-  const choseFile_ref = useRef(null);
-  const [loadStatus, setloadStatus] = useState(null);
+  const [modalIsOpen, setIsOpen] = React.useState(false)
+  const choseFile_ref = useRef(null)
+  const [loadStatus, setloadStatus] = useState(null)
 
   const [lesson, setLesson] = useState({
     Chap_ID: '',
     Lesson_header: '',
     Lesson_description: '',
     Lesson_video: null,
-    Lesson_view: 1,
+    Lesson_isFree: 1,
     Lesson_ID: null
-  });
-  const Lesson_viewList = ['Học thử', 'Không học thử'];
-
-
-  const [nameFile, setNameFile] = useState('');
+  })
+  const Lesson_isFreeList = ['Học thử', 'Không học thử']
+  const [nameFile, setNameFile] = useState('')
 
   const handleChangeValue = (props) => (e) => {
-    setLesson({ ...lesson, [props]: e.target.value });
+    setLesson({ ...lesson, [props]: e.target.value })
   }
-
-
   const handleImageChange = (props) => (e) => {
-    setLesson({ ...lesson, [props]: e.target.files[0] });
-    setNameFile(e.target.files[0].name);
+    setLesson({ ...lesson, [props]: e.target.files[0] })
+    setNameFile(e.target.files[0].name)
   }
-
+  const resetModal = () => {
+    setLesson({
+      Chap_ID: '',
+      Lesson_header: '',
+      Lesson_description: '',
+      Lesson_video: null,
+      Lesson_isFree: 1,
+      Lesson_ID: null
+    })
+    setNameFile('')
+  }
   const openModal = (item) => {
     if (item !== null) {
-      setNameFile(item.video)
+      // setNameFile(item.video)
       setLesson(item)
     }
 
-    setIsOpen(true);
-    document.getElementsByClassName('ReactModalPortal')[0].classList.add("active");
-   settag(item != null ? 1 : 2)
+    setIsOpen(true)
+    document.getElementsByClassName('ReactModalPortal')[0].classList.add("active")
+    settag(item != null ? 1 : 2)
   }
 
   const closeModal = () => {
-    setIsOpen(false);
+    setIsOpen(false)
   }
 
-  let axiosConfig = {
-    headers: {
-      'Content-Type': 'application/json;charset-UTF-8',
-      "Accept": 'application/json',
-      "Authorization": `Bearer ${localStorage.getItem('token-teacher')}`
-    }
-  }
   const postLession = (item, addLesson) => {
 
     const formData = new FormData()
-    formData.append("file", lesson.Lesson_video);
+    formData.append("file", lesson.Lesson_video)
     formData.append("upload_preset", "uploadvideo")
-    Axios.post(api.find(e => e.pages === 'Thêm khóa học').api['upload-video'], formData,{
+    Axios.post(api.find(e => e.pages === 'Thêm khóa học').api['upload-video'], formData, {
       onUploadProgress: progressEvent => {
         console.log("Loaded : ", progressEvent.loaded)
       }
@@ -85,27 +85,28 @@ export default function ModalLesson(props) {
       lessonData.Chap_ID = item.Chap_ID
       lessonData.Lesson_video = rs.data.secure_url
       if (tag === 2) {
+        setloadStatus(1)
         closeModal()
-        Axios.post(api.find(e => e.pages === 'Thêm khóa học').api['post-lesson'], lessonData,  axiosConfig,() => {
-          setloadStatus(1)
-        })
+        postData(api.find(e => e.pages === 'Thêm khóa học').api['post-lesson'], lessonData)
           .then(
-            res => {
-              lessonData.Lesson_ID = res.data.lessonID
+            data => {
+              lessonData.Lesson_ID = data.LessonID
               addLesson(lessonData)
               setloadStatus(null)
-              closeModal()
+              toast.success('Thêm mới bài giảng thành công')
+              resetModal()
             }
           )
       } else {
-        Axios.put(api.find(e => e.pages === 'Thêm khóa học').api['update-lesson'] + '/' + lesson.Lesson_ID, lessonData, axiosConfig, () => {
-          setloadStatus(1)
-        })
+        setloadStatus(1)
+        closeModal()
+        putData(api.find(e => e.pages === 'Thêm khóa học').api['update-lesson'] + lesson.Lesson_ID, lessonData)
           .then(
             res => {
+              toast.success('Cập nhật bài giảng thành công')
               addLesson(lessonData)
               setloadStatus(null)
-              closeModal()
+              resetModal()
             }
           )
       }
@@ -119,7 +120,7 @@ export default function ModalLesson(props) {
     return <li key={index} onClick={() => openModal(item)}>
       <span className="counter">{'Bài' + (index + 1) + ': '}</span>
       <span className="lession-name">{item.Lesson_header}</span>
-      <span className="lession-tag">{item.Lesson_view === 1 ? 'Học thử' : ''}</span>
+      <span className="lession-tag">{item.Lesson_isFree === 1 ? 'Học thử' : ''}</span>
     </li>
   }
   return (
@@ -136,7 +137,6 @@ export default function ModalLesson(props) {
         onRequestClose={closeModal}
         style={customStyles}
         contentLabel="Example Modal"
-
       >
         <div>
           <h3 className="Lesson_header-lesson">{props.Lesson_header}</h3>
@@ -181,10 +181,10 @@ export default function ModalLesson(props) {
             <div className="input-group input-lesson">
               <select
                 name="state"
-                value={lesson['Lesson_view'] === 1 ? lesson['Lesson_view'] : 2}
-                onChange={handleChangeValue('Lesson_view')}>
+                value={lesson['Lesson_isFree'] === 1 ? lesson['Lesson_isFree'] : 2}
+                onChange={handleChangeValue('Lesson_isFree')}>
                 {
-                  Lesson_viewList.map((items, index) => (
+                  Lesson_isFreeList.map((items, index) => (
                     <option value={index + 1} key={items}>{items}</option>
                   ))
                 }
@@ -210,6 +210,6 @@ export default function ModalLesson(props) {
         </div>
       </Modal>
     </div>
-  );
+  )
 }
 

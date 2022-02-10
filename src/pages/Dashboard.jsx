@@ -6,8 +6,8 @@ import statusCard from '../assets/JsonData/status-card-data.json'
 import { StatusCard } from '../component/status-card/StatusCard'
 import Table from '../component/table/Table'
 import { useSelector } from 'react-redux'
-import Axios from 'axios'
 import api from '../assets/JsonData/api.json'
+import { getData } from '../utils/fecthData'
 
 const chartOptions = {
     color: ['#6ab04c', '#2980b9'],
@@ -21,7 +21,7 @@ const chartOptions = {
         curve: 'smooth'
     },
     xaxis: {
-        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep','Oct','Nov','Dec']
+        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     },
     legend: {
         position: 'top'
@@ -30,8 +30,6 @@ const chartOptions = {
         show: false
     }
 }
-
-
 const topCustomerHeader = [
     'Tên',
     'lượt mua',
@@ -87,62 +85,42 @@ const Dashboard = () => {
     const [counter, setCounter] = useState([])
     const [students, setStudents] = useState([])
     const [newOrders, setNewOrders] = useState([])
-    let axiosConfig = {
-        headers: {
-          'Content-Type': 'application/json;charset-UTF-8',
-          "Accept": 'application/json',
-          "Authorization": `Bearer ${localStorage.getItem('token-teacher')}`
-        }
-      }
+    const themeReducer = useSelector(state => state.ThemeReducer.mode)
+
+
+    const initData = ()=>{
+        getData(api.find((e) => e.pages === "Tổng quan").api['get-chart']).then(
+            data => {
+                console.log(data)
+                setSerial([
+                    {
+                        name: 'Học viên mới',
+                        data: data.newstudent
+                    },
+                    {
+                        name: 'Doanh thu',
+                        data: data.revune
+                    }
+                ])
+            }
+        )
+        getData(api.find((e) => e.pages === "Tổng quan").api['get-counter']).then(
+            data => {
+                setCounter([
+                    data.courseTotal,
+                    data.studentTotal,
+                    data.revune,
+                    data.payTotal
+                ])
+            }
+        )
+        getData(api.find((e) => e.pages === "Tổng quan").api['get-top_student']).then(data => setStudents(data))
+        getData(api.find((e) => e.pages === "Tổng quan").api['get-new_order']).then(data=>setNewOrders(data))
+    }
     useEffect(() => {
-        Axios.get(api.find((e) => e.pages === "Tổng quan").api['get-chart'],axiosConfig)
-            .then(
-                (res) => {
-                    setSerial([
-                        {
-                            name: 'Học viên mới',
-                            data: res.data.newstudent
-                        },
-                        {
-                            name: 'Doanh thu',
-                            data: res.data.revune
-                        }
-                    ])
-                }
-            )
-            
-        Axios.get(api.find((e) => e.pages === "Tổng quan").api['get-counter'],axiosConfig)
-            .then(
-                (res) => {
-                    setCounter([
-                        res.data.courseTotal,
-                        res.data.studentTotal,
-                        res.data.revune,
-                        res.data.payTotal
-                    ])
-
-                }
-            )
-
-        Axios.get(api.find((e) => e.pages === "Tổng quan").api['get-top_student'],axiosConfig)
-            .then(
-                (res) => {
-                    const data = res.data
-                    setStudents(data);
-                }
-            )
-
-        Axios.get(api.find((e) => e.pages === "Tổng quan").api['get-new_order'],axiosConfig)
-            .then(
-                (res) => {
-                    const data = res.data.slice(0,5)
-                    setNewOrders(data)
-                }
-            )
-
+     initData()
     }, [])
 
-    const themeReducer = useSelector(state => state.ThemeReducer.mode)
     return (
         <div>
             <h2 className="page-header">Tổng quan</h2>

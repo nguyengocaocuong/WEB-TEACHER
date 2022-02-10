@@ -9,6 +9,8 @@ import ThemeActions from '../../redux/actions/ThemeAction'
 import './Layout.css'
 import { checkToken } from '../../service'
 import {Notify} from '../notify/Notify'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 
 export const Layout = () => {
@@ -36,6 +38,17 @@ export const Layout = () => {
             <>
                 <Route render={(props) => {
                     return (<div className={`layout ${themeReducer.mode} ${themeReducer.color}`}>
+                    <ToastContainer
+                    position="bottom-right"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    />
                         <Sidebar {...props} />
                         <div className="layout_content">
                             <TopNav />

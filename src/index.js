@@ -35,8 +35,7 @@ ReactDOM.render(
         </Switch>
       </React.StrictMode>
     </Provider>
-  </BrowserRouter>
-  ,
+  </BrowserRouter> ,
   document.getElementById('root')
 );
 
