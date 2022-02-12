@@ -96,28 +96,28 @@ input.file-name ~ button:hover {
   right: 0px;
 }
 
-.card-header__lession {
+.card-header__Lesson {
   display: flex;
   justify-content: space-between;
 }
-.card-header__lession > button {
+.card-header__Lesson > button {
   font-size: 1.5rem;
   transform: scale(0.8);
   background-color: transparent;
   transition: transform 0.5s ease;
 }
-.card-header__lession > button:hover {
+.card-header__Lesson > button:hover {
   color: var(--main-color);
   transform: scale(1);
 }
 
-.lession-chap-header button {
+.Lesson-chap-header button {
   font-size: 1.2rem;
   transform: scale(0.8);
   background-color: transparent;
   transition: transform 0.5s ease;
 }
-.lession-chap-header button:hover {
+.Lesson-chap-header button:hover {
   color: var(--main-color);
   transform: scale(1);
 }
@@ -125,7 +125,7 @@ input.file-name ~ button:hover {
   display: flex;
   justify-content: space-between;
 }
-.lession-chap ul {
+.Lesson-chap ul {
   margin: 10px 15px;
 }
 .card-footer input {

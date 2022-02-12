@@ -17,13 +17,13 @@
     {
         "pages": "Khóa học",
         "api": {
-            "get-list_course": "http://127.0.0.1:8000/api/teacher/getListUploadedCourses/"
+            "get-list_course": "https://ltweb-backend.herokuapp.com/api/teacher/getListUploadedCourses"
         }
     },
     {
         "pages": "Lịch sử mua",
         "api": {
-            "get-list_history": "http://127.0.0.1:8000/api/teacher/statistic/listHistory"
+            "get-list_history": "https://ltweb-backend.herokuapp.com/api/teacher/statistic/listHistory"
         }
     },
     {
@@ -48,7 +48,7 @@
     {
         "pages":"Đăng nhập",
         "api":{
-            "login":"http://127.0.0.1:8000/api/login",
+            "login":"api/login",
             "check-token":"getUserDetails"
         }
     }

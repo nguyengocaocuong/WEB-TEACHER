@@ -63,7 +63,7 @@ export const CreateCourse = () => {
             () => toast.success('Cập nhật thành công')
           ).catch(() => toast.error('Cập nhật không thành công'))
         else
-          Axios.post('http://127.0.0.1:8000/api/teacher/manage/addCourse', courseData, {
+          Axios.post('https://ltweb-backend.herokuapp.com/api/teacher/manage/addCourse', courseData, {
             headers: {
               'Content-Type': 'application/json;charset-UTF-8',
               "Accept": 'application/json',
@@ -101,7 +101,6 @@ export const CreateCourse = () => {
             let tags = list_new_categories.find(item => item.category.Category_ID === data[0].Course_category).tags.filter(value => data[1].indexOf(value.Tag_ID) > -1)
             setCourse({ ...data[0], Tag_ID: tags })
             setlesson(data[2])
-            console.log(data)
           }
         ).catch(error => {
           console.log("Error : ", error)

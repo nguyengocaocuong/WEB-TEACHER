@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { useHistory } from "react-router-dom"
-import api from '../assets/JsonData/api.json'
 import { checkToken } from '../service'
 import { Account } from '../Model'
 import { Link } from 'react-router-dom'

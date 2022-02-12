@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const apiUrl = "http://127.0.0.1:8000";
+// const apiUrl = "http://127.0.0.1:8000";
+const apiUrl = "https://ltweb-backend.herokuapp.com";
 
 export const getData = async (url) => {
   const res = await axios.get(`${apiUrl}/api/${url}`, {

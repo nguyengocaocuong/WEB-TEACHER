@@ -70,11 +70,11 @@ li {
   line-height: 20px;
   padding: 1px 5px;
 }
-.lession-name {
+.Lesson-name {
   font-size: 0.8rem;
   color: var(--txt-color);
 }
-.lession-tag {
+.Lesson-tag {
   font-size: 0.6rem;
   color: var(--main-color);
   float: right;

@@ -35,11 +35,16 @@ export default function ModalLesson(props) {
     Lesson_isFree: 1,
     Lesson_ID: null
   })
-  const Lesson_isFreeList = ['Học thử', 'Không học thử']
+  const Lesson_isFreeList = ['Không học thử','Học thử']
   const [nameFile, setNameFile] = useState('')
 
   const handleChangeValue = (props) => (e) => {
+    if (props === 'Lesson_isFree') {
+      setLesson({ ...lesson, [props]: parseInt(e.target.value) })
+      return
+    }
     setLesson({ ...lesson, [props]: e.target.value })
+    console.log(lesson)
   }
   const handleImageChange = (props) => (e) => {
     setLesson({ ...lesson, [props]: e.target.files[0] })
@@ -58,7 +63,6 @@ export default function ModalLesson(props) {
   }
   const openModal = (item) => {
     if (item !== null) {
-      // setNameFile(item.video)
       setLesson(item)
     }
 
@@ -71,17 +75,13 @@ export default function ModalLesson(props) {
     setIsOpen(false)
   }
 
-  const postLession = (item, addLesson) => {
+  const postLesson = (item, addLesson) => {
 
     const formData = new FormData()
     formData.append("file", lesson.Lesson_video)
     formData.append("upload_preset", "uploadvideo")
-    Axios.post(api.find(e => e.pages === 'Thêm khóa học').api['upload-video'], formData, {
-      onUploadProgress: progressEvent => {
-        console.log("Loaded : ", progressEvent.loaded)
-      }
-    }).then((rs) => {
-      const lessonData = lesson
+    Axios.post(api.find(e => e.pages === 'Thêm khóa học').api['upload-video'], formData).then((rs) => {
+      const lessonData = {...lesson}
       lessonData.Chap_ID = item.Chap_ID
       lessonData.Lesson_video = rs.data.secure_url
       if (tag === 2) {
@@ -100,6 +100,7 @@ export default function ModalLesson(props) {
       } else {
         setloadStatus(1)
         closeModal()
+        console.log("lesson",lessonData)
         putData(api.find(e => e.pages === 'Thêm khóa học').api['update-lesson'] + lesson.Lesson_ID, lessonData)
           .then(
             res => {
@@ -116,11 +117,11 @@ export default function ModalLesson(props) {
 
   }
 
-  const renderLessionItem = (item, index) => {
+  const renderLessonItem = (item, index) => {
     return <li key={index} onClick={() => openModal(item)}>
       <span className="counter">{'Bài' + (index + 1) + ': '}</span>
-      <span className="lession-name">{item.Lesson_header}</span>
-      <span className="lession-tag">{item.Lesson_isFree === 1 ? 'Học thử' : ''}</span>
+      <span className="Lesson-name">{item.Lesson_header}</span>
+      <span className="Lesson-tag">{item.Lesson_isFree == 1 ? 'Học thử' : ''}</span>
     </li>
   }
   return (
@@ -129,7 +130,7 @@ export default function ModalLesson(props) {
         props.content === 1 ?
           <button className='btn-open-modal' onClick={() => openModal(null)}><i className='bx bx-add-to-queue' ></i></button>
           :
-          renderLessionItem(props.content.item, props.content.index)
+          renderLessonItem(props.content.item, props.content.index)
 
       }
       <Modal
@@ -181,11 +182,11 @@ export default function ModalLesson(props) {
             <div className="input-group input-lesson">
               <select
                 name="state"
-                value={lesson['Lesson_isFree'] === 1 ? lesson['Lesson_isFree'] : 2}
+                value={lesson['Lesson_isFree'] === 0 ? lesson['Lesson_isFree'] : 1}
                 onChange={handleChangeValue('Lesson_isFree')}>
                 {
                   Lesson_isFreeList.map((items, index) => (
-                    <option value={index + 1} key={items}>{items}</option>
+                    <option value={index} key={items}>{items}</option>
                   ))
                 }
               </select>
@@ -206,7 +207,7 @@ export default function ModalLesson(props) {
 
         <div className="list-active">
           <button onClick={closeModal} className="btn-close">Đóng</button>
-          <button onClick={() => postLession(props.item, props.content === 1 ? props.addLesson : props.updateLesson)} className="btn-save">{props.content === 1 ? 'Lưu' : 'Cập nhật'}</button>
+          <button onClick={() => postLesson(props.item, props.content === 1 ? props.addLesson : props.updateLesson)} className="btn-save">{props.content === 1 ? 'Lưu' : 'Cập nhật'}</button>
         </div>
       </Modal>
     </div>
